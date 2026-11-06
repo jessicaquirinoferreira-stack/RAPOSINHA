@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import { User, AppSettings } from '../../types';
 import { logoutUser } from '../../lib/firebase';
 import { PWAInstallPrompt } from '../pwa/PWAInstallPrompt';
+import { useLanguage } from '../../i18n/LanguageContext';
+import { LanguageSelector } from '../layout/LanguageSelector';
 import { 
   User as UserIcon, 
   Crown, 
   Sparkles, 
   LogOut, 
-  ShieldAlert, 
-  Smartphone, 
-  Heart, 
-  BookOpen, 
-  Info,
-  Check
+  Globe,
+  Info
 } from 'lucide-react';
 
 interface ProfileViewProps {
@@ -28,6 +26,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onLogout,
   onOpenAdmin,
 }) => {
+  const { t, language } = useLanguage();
   const [selectedBadge, setSelectedBadge] = useState(currentUser.avatarBadge || 'fox');
   const isAdmin = currentUser.role === 'admin' || currentUser.email === 'claudia@x.com';
 
@@ -53,14 +52,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-6 pb-6 text-[#FDF6E3]">
       {/* Header */}
       <div>
         <h1 className="font-serif-royal text-2xl font-bold text-[#FDF6E3]">
-          Meu Perfil Real
+          {language === 'en' ? 'My Royal Profile' : language === 'es' ? 'Mi Perfil Real' : 'Meu Perfil Real'}
         </h1>
         <p className="text-xs text-white/70">
-          Dados da sua conta no Clube das Raposinhas e preferências do aplicativo.
+          {language === 'en' 
+            ? 'Account information and language preferences.' 
+            : language === 'es' 
+            ? 'Datos de tu cuenta y preferencias de idioma.' 
+            : 'Dados da sua conta no Clube das Raposinhas e preferências do aplicativo.'}
         </p>
       </div>
 
@@ -83,7 +86,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </span>
           ) : (
             <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-xs font-bold text-emerald-300">
-              Assinante Oficial
+              {language === 'en' ? 'Active Member' : language === 'es' ? 'Suscriptor Activo' : 'Assinante Oficial'}
             </span>
           )}
         </div>
@@ -91,7 +94,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         {/* Escolha de Avatar Mágico */}
         <div className="mt-5 pt-4 border-t border-white/10">
           <label className="text-[11px] font-bold text-white/70 block mb-2 uppercase tracking-wider">
-            Escolha seu Brasão de Avatar
+            {language === 'en' ? 'Choose Your Royal Avatar' : language === 'es' ? 'Elige tu Escudo de Avatar' : 'Escolha seu Brasão de Avatar'}
           </label>
           <div className="flex items-center justify-center gap-2">
             {badges.map((b) => (
@@ -110,6 +113,25 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Seção de Idioma do Aplicativo */}
+      <div className="p-4 rounded-3xl bg-[#24133A] border border-[#D4AF37]/40 shadow-md flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#D4AF37] to-[#B8860B] flex items-center justify-center text-lg text-[#1A1A1A] font-bold shrink-0">
+            <Globe className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="font-serif-royal text-xs font-bold text-[#FDF6E3]">
+              {t('common', 'language')} (Language / Idioma)
+            </h4>
+            <p className="text-[10px] text-white/60">
+              {language === 'en' ? 'Change app language anytime' : language === 'es' ? 'Cambia el idioma de la app' : 'Português 🇧🇷, Español 🇪🇸, English 🇺🇸'}
+            </p>
+          </div>
+        </div>
+
+        <LanguageSelector variant="compact" />
       </div>
 
       {/* Acesso Especial de Administradora */}
@@ -144,15 +166,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {/* Informações da Versão */}
       <div className="p-4 rounded-2xl bg-[#1C0D2E] border border-white/10 text-xs text-white/70 space-y-2">
         <div className="flex justify-between">
-          <span>Aplicativo:</span>
-          <span className="font-semibold text-white">Clube das Raposinhas PWA</span>
+          <span>{t('common', 'appName')}:</span>
+          <span className="font-semibold text-white">PWA Mobile-First</span>
         </div>
         <div className="flex justify-between">
-          <span>Modo de Operação:</span>
-          <span className="text-emerald-400 font-semibold">Mobile-First Nativo</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Plano Ativo:</span>
+          <span>{language === 'en' ? 'Active Plan:' : language === 'es' ? 'Plan Activo:' : 'Plano Ativo:'}</span>
           <span className="text-[#F9E79F] font-semibold">{settings.planName}</span>
         </div>
       </div>
@@ -161,20 +179,20 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {showLogoutConfirm ? (
         <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-center space-y-3 animate-fade-in">
           <p className="text-xs font-semibold text-rose-200">
-            Deseja realmente sair da sua conta mágica?
+            {language === 'en' ? 'Do you really want to sign out?' : language === 'es' ? '¿Deseas cerrar sesión?' : 'Deseja realmente sair da sua conta mágica?'}
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => setShowLogoutConfirm(false)}
               className="flex-1 py-2 rounded-xl border border-white/20 text-xs font-medium text-white hover:bg-white/10"
             >
-              Cancelar
+              {t('common', 'cancel')}
             </button>
             <button
               onClick={handleLogoutClick}
               className="flex-1 py-2 rounded-xl bg-rose-600 text-xs font-bold text-white hover:bg-rose-700"
             >
-              Sim, Sair
+              {language === 'en' ? 'Yes, Sign Out' : language === 'es' ? 'Sí, Salir' : 'Sim, Sair'}
             </button>
           </div>
         </div>
@@ -184,7 +202,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           className="w-full py-3.5 rounded-2xl border border-rose-500/40 bg-rose-500/10 text-rose-300 font-bold text-xs hover:bg-rose-500/20 active:scale-95 transition flex items-center justify-center gap-2"
         >
           <LogOut className="w-4 h-4" />
-          <span>Sair da Minha Conta</span>
+          <span>{language === 'en' ? 'Sign Out' : language === 'es' ? 'Cerrar Sesión' : 'Sair da Minha Conta'}</span>
         </button>
       )}
     </div>

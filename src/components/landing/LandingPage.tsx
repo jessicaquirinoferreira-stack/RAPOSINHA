@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppSettings, Story } from '../../types';
 import { PWAInstallPrompt } from '../pwa/PWAInstallPrompt';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { 
   Sparkles, 
   Crown, 
@@ -8,11 +9,10 @@ import {
   BookOpen, 
   ShieldCheck, 
   Heart, 
-  CheckCircle2, 
   Star, 
   ArrowRight, 
   Play,
-  Lock
+  Mic
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -30,24 +30,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenLogin,
   onPreviewListen,
 }) => {
-  const sampleStory = stories[0];
+  const { t, language } = useLanguage();
+  // Pega a história com áudio original gravado como destaque de amostra
+  const officialStory = stories.find(s => s.audioUrl && s.audioUrl.trim().length > 5) || stories[0];
+
+  const currencySymbol = language === 'en' ? 'US$' : language === 'es' ? 'US$' : 'R$';
 
   const testimonials = [
     {
       name: 'Camila & Princesa Manu (5 anos)',
-      text: 'O momento de dormir se transformou! Os contos são tão delicados e a trilha com harpa acalma a Manu em poucos minutos. Vale cada centavo!',
+      text: language === 'en' 
+        ? 'Bedtime has completely transformed! The tales are so gentle and the harp soundtrack calms Manu in minutes. Worth every penny!'
+        : language === 'es'
+        ? '¡La hora de dormir se ha transformado! Los cuentos son tan tiernos y la música de arpa calma a Manu en minutos. ¡Vale cada centavo!'
+        : 'O momento de dormir se transformou! Os contos são tão delicados e a trilha com harpa acalma a Manu em poucos minutos. Vale cada centavo!',
       avatar: '👑',
       stars: 5,
     },
     {
       name: 'Mariana (Mãe do Theo)',
-      text: 'O aplicativo funciona perfeitamente no celular como se tivesse baixado da loja. Meu filho adora a Raposinha Aurelia e o Dragão Musical!',
+      text: language === 'en'
+        ? 'The app works smoothly on mobile just like an App Store app. My son adores the Little Fox Aurelia and the Musical Dragon!'
+        : language === 'es'
+        ? 'La app funciona fluidamente en el móvil como si la hubiéramos bajado de la tienda. ¡A mi hijo le encanta la Zorrita Aurelia!'
+        : 'O aplicativo funciona perfeitamente no celular como se tivesse baixado da loja. Meu filho adora a Raposinha Aurelia e o Dragão Musical!',
       avatar: '🦊',
       stars: 5,
     },
     {
       name: 'Luciana',
-      text: 'A Claudia tem uma voz acolhedora e as histórias ensinam valores lindos de amizade e bondade. Recomendo de olhos fechados!',
+      text: language === 'en'
+        ? 'Claudia has such a warm, comforting storytelling voice and the stories teach noble values of kindness and courage. Highly recommended!'
+        : language === 'es'
+        ? 'Claudia tiene una voz sumamente acogedora y las historias enseñan bellos valores de amistad y bondad. ¡Recomendado con los ojos cerrados!'
+        : 'A Claudia tem uma voz acolhedora e as histórias ensinam valores lindos de amizade e bondade. Recomendo de olhos fechados!',
       avatar: '🌹',
       stars: 5,
     },
@@ -71,9 +87,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
           <div>
             <h2 className="font-serif-royal text-sm font-bold text-[#FDF6E3] leading-none">
-              Clube das Raposinhas
+              {t('common', 'appName')}
             </h2>
-            <span className="text-[10px] text-[#D4AF37]">Contos & Áudios Encantados</span>
+            <span className="text-[10px] text-[#D4AF37]">{t('common', 'tagline')}</span>
           </div>
         </div>
 
@@ -84,7 +100,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             className="flex-1 sm:flex-initial px-3 py-1.5 rounded-xl border border-[#D4AF37]/60 bg-[#D4AF37]/15 text-[#F9E79F] font-bold text-xs hover:bg-[#D4AF37]/25 active:scale-95 transition flex items-center justify-center gap-1"
           >
             <span>🦊</span>
-            <span>Área do Cliente</span>
+            <span>{t('auth', 'clientTab')}</span>
           </button>
 
           <button
@@ -92,7 +108,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             className="flex-1 sm:flex-initial px-3 py-1.5 rounded-xl border border-white/20 bg-white/5 text-white/90 font-bold text-xs hover:bg-white/15 active:scale-95 transition flex items-center justify-center gap-1"
           >
             <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-            <span>Área do Admin</span>
+            <span>{t('auth', 'adminTab')}</span>
           </button>
         </div>
       </div>
@@ -101,15 +117,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="text-center relative py-4">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/15 backdrop-blur-md text-xs font-bold text-[#F9E79F] mb-4 shadow-sm">
           <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-          <span>Clube de Assinatura Infantil & Familiar</span>
+          <span>{t('landing', 'badge')}</span>
         </div>
 
         <h1 className="font-serif-royal text-3xl sm:text-4xl font-extrabold text-[#FDF6E3] leading-tight tracking-wide mb-3">
-          {settings.landingHeroTitle}
+          {t('landing', 'heroTitle')}
         </h1>
 
         <p className="text-xs sm:text-sm text-white/80 max-w-md mx-auto leading-relaxed mb-6 font-medium">
-          {settings.landingHeroSubtitle}
+          {t('landing', 'heroSubtitle')}
         </p>
 
         {/* Card do Preço Dinâmico (Vindo do Painel Admin!) */}
@@ -121,15 +137,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </span>
 
           <div className="flex items-baseline justify-center gap-1 text-[#D4AF37] my-2">
-            <span className="text-base font-bold">R$</span>
+            <span className="text-base font-bold">{currencySymbol}</span>
             <span className="text-4xl font-extrabold tracking-tight">
               {settings.monthlyPrice.toFixed(2).replace('.', ',')}
             </span>
-            <span className="text-xs text-white/70">/mês</span>
+            <span className="text-xs text-white/70">/{language === 'en' ? 'month' : language === 'es' ? 'mes' : 'mês'}</span>
           </div>
 
           <p className="text-[11px] text-white/70 mb-5">
-            Sem fidelidade • Cancele quando quiser • Acesso instantâneo a todos os contos e áudios
+            {t('landing', 'cancelAnytime')}
           </p>
 
           <button
@@ -137,13 +153,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F9E79F] to-[#AA7C11] text-[#1A1A1A] font-extrabold text-sm shadow-gold hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 group"
           >
             <Crown className="w-4 h-4 fill-current" />
-            <span>Assinar Agora com InfinitePay</span>
+            <span>{t('landing', 'subscribeBtn')}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
 
           <div className="mt-3 flex items-center justify-center gap-2 text-[10px] text-emerald-400 font-semibold">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Pagamento Seguro via Pix ou Cartão de Crédito</span>
+            <span>{t('landing', 'infinitePaySeal')}</span>
           </div>
         </div>
       </div>
@@ -151,33 +167,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* PWA Prompt na Landing */}
       <PWAInstallPrompt compact={false} />
 
-      {/* Demonstração de Áudio e História */}
-      {sampleStory && (
-        <div className="p-5 rounded-3xl bg-[#24133A] border border-[#D4AF37]/40 shadow-xl">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-2">
-            <Headphones className="w-4 h-4" />
-            <span>Ouça uma Amostra Gratuita</span>
+      {/* Demonstração de Áudio e História com a Voz Original da Narradora */}
+      {officialStory && (
+        <div className="p-5 rounded-3xl bg-gradient-to-r from-[#2F1C4A] to-[#24133A] border-2 border-[#D4AF37] shadow-xl relative overflow-hidden">
+          <div className="flex items-center justify-between gap-2 text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-2">
+            <div className="flex items-center gap-1.5">
+              <Mic className="w-4 h-4 text-rose-400" />
+              <span>{t('landing', 'officialStoryBadge')}</span>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-[#D4AF37] text-[#1A1A1A] text-[9px] font-extrabold">
+              Áudio Real
+            </span>
           </div>
 
           <div className="flex items-center gap-4">
             <img
-              src={sampleStory.coverUrl}
-              alt={sampleStory.title}
-              className="w-20 h-20 rounded-2xl object-cover border-2 border-[#D4AF37]/60 shrink-0"
+              src={officialStory.coverUrl}
+              alt={officialStory.title}
+              className="w-20 h-20 rounded-2xl object-cover border-2 border-[#D4AF37] shrink-0 shadow-md"
             />
             <div className="min-w-0 flex-1">
               <h3 className="font-serif-royal text-sm font-bold text-[#FDF6E3] truncate">
-                {sampleStory.title}
+                {officialStory.title}
               </h3>
-              <p className="text-xs text-white/60 line-clamp-2 mt-0.5">
-                {sampleStory.description}
+              <p className="text-xs text-white/70 line-clamp-2 mt-0.5">
+                {officialStory.description}
               </p>
               <button
-                onClick={() => onPreviewListen(sampleStory)}
+                onClick={() => onPreviewListen(officialStory)}
                 className="mt-2.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#1A1A1A] font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition"
               >
                 <Play className="w-3 h-3 fill-current" />
-                <span>Ouvir com Harpa & Voz</span>
+                <span>Ouvir Voz Gravada da Narradora</span>
               </button>
             </div>
           </div>
@@ -187,7 +208,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* Benefícios Inclusos */}
       <div>
         <h3 className="font-serif-royal text-xl font-bold text-center text-[#FDF6E3] mb-4">
-          Tudo o Que Seu Pequeno Ganha no Clube
+          {t('landing', 'perksTitle')}
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -210,28 +231,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* Depoimentos Encantados */}
       <div>
         <h3 className="font-serif-royal text-xl font-bold text-center text-[#FDF6E3] mb-4">
-          O Que as Famílias Estão Dizendo
+          {language === 'en' ? 'What Families Are Saying' : language === 'es' ? 'Lo Que Dicen las Familias' : 'O Que as Famílias Estão Dizendo'}
         </h3>
 
         <div className="space-y-3">
-          {testimonials.map((t, idx) => (
+          {testimonials.map((tItem, idx) => (
             <div
               key={idx}
               className="p-4 rounded-2xl bg-[#1F1133] border border-[#D4AF37]/20 shadow-md"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{t.avatar}</span>
-                  <span className="text-xs font-bold text-[#F9E79F]">{t.name}</span>
+                  <span className="text-xl">{tItem.avatar}</span>
+                  <span className="text-xs font-bold text-[#F9E79F]">{tItem.name}</span>
                 </div>
                 <div className="flex text-[#D4AF37]">
-                  {Array.from({ length: t.stars }).map((_, s) => (
+                  {Array.from({ length: tItem.stars }).map((_, s) => (
                     <Star key={s} className="w-3 h-3 fill-current" />
                   ))}
                 </div>
               </div>
               <p className="text-xs text-white/80 italic leading-relaxed">
-                "{t.text}"
+                "{tItem.text}"
               </p>
             </div>
           ))}
@@ -242,17 +263,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="p-6 rounded-3xl bg-gradient-to-r from-[#4A2C6A] via-[#3B2056] to-[#251538] border-2 border-[#D4AF37] text-center shadow-2xl">
         <Crown className="w-10 h-10 text-[#D4AF37] mx-auto mb-2" />
         <h3 className="font-serif-royal text-xl font-bold text-[#FDF6E3] mb-1">
-          Dê Asas à Imaginação Hoje Mesmo
+          {language === 'en' ? 'Spark Imagination Today' : language === 'es' ? 'Da Alas a la Imaginación Hoy Mismo' : 'Dê Asas à Imaginação Hoje Mesmo'}
         </h3>
         <p className="text-xs text-white/70 max-w-xs mx-auto mb-5">
-          Por apenas R$ {settings.monthlyPrice.toFixed(2).replace('.', ',')} por mês, receba histórias e áudios que transformam noites agitadas em momentos de puro afeto.
+          {currencySymbol} {settings.monthlyPrice.toFixed(2).replace('.', ',')} • {t('landing', 'cancelAnytime')}
         </p>
 
         <button
           onClick={onOpenCheckout}
           className="w-full max-w-xs mx-auto py-3.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#1A1A1A] font-extrabold text-sm shadow-gold hover:brightness-110 active:scale-95 transition"
         >
-          Quero Fazer Parte do Clube
+          {t('landing', 'subscribeBtn')}
         </button>
 
         <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-center gap-4 text-xs">
@@ -260,7 +281,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             onClick={() => onOpenLogin('client')}
             className="text-[#F9E79F] hover:underline font-semibold flex items-center gap-1"
           >
-            <span>🦊 Área do Cliente</span>
+            <span>🦊 {t('auth', 'clientTab')}</span>
           </button>
           <span className="text-white/30">•</span>
           <button
@@ -268,7 +289,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             className="text-white/70 hover:text-white font-semibold flex items-center gap-1"
           >
             <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-            <span>Área da Claudia (Admin)</span>
+            <span>{t('auth', 'adminTab')}</span>
           </button>
         </div>
       </div>

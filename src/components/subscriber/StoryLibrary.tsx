@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Story, StoryCategory } from '../../types';
 import { INITIAL_CATEGORIES } from '../../data/initialData';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { 
   Search, 
   Headphones, 
@@ -8,7 +9,7 @@ import {
   Heart, 
   Clock, 
   Sparkles,
-  Filter
+  Mic
 } from 'lucide-react';
 
 interface StoryLibraryProps {
@@ -28,6 +29,7 @@ export const StoryLibrary: React.FC<StoryLibraryProps> = ({
   onListenStory,
   onToggleFavorite,
 }) => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory || 'all');
 
@@ -47,10 +49,10 @@ export const StoryLibrary: React.FC<StoryLibraryProps> = ({
       {/* Header */}
       <div>
         <h1 className="font-serif-royal text-2xl font-bold text-[#FDF6E3]">
-          Biblioteca de Histórias
+          {t('library', 'title')}
         </h1>
         <p className="text-xs text-white/70">
-          Acesso completo a todos os contos, fábulas e áudios narrados do clube.
+          {t('library', 'subtitle')}
         </p>
       </div>
 
@@ -61,7 +63,7 @@ export const StoryLibrary: React.FC<StoryLibraryProps> = ({
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Buscar conto por nome, palavra ou personagem..."
+          placeholder={t('library', 'searchPlaceholder')}
           className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#24133A] border border-[#D4AF37]/30 text-white placeholder-white/40 text-xs sm:text-sm outline-none focus:border-[#D4AF37] transition shadow-md"
         />
       </div>
@@ -76,7 +78,7 @@ export const StoryLibrary: React.FC<StoryLibraryProps> = ({
               : 'bg-[#24133A] border border-white/10 text-white/70 hover:text-white'
           }`}
         >
-          ✨ Todos os Contos
+          ✨ {t('library', 'allCategories')}
         </button>
 
         {INITIAL_CATEGORIES.map((cat) => (
@@ -100,14 +102,15 @@ export const StoryLibrary: React.FC<StoryLibraryProps> = ({
         <div className="p-12 text-center rounded-3xl bg-[#24133A] border border-white/10 text-white/60">
           <Sparkles className="w-8 h-8 text-[#D4AF37] mx-auto mb-2 opacity-50" />
           <h3 className="font-serif-royal text-sm font-bold text-white mb-1">
-            Nenhum conto encontrado
+            {t('library', 'noStoriesFound')}
           </h3>
-          <p className="text-xs">Tente buscar por outro termo ou selecione todas as categorias.</p>
+          <p className="text-xs">{t('library', 'tryAnotherSearch')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filteredStories.map((story) => {
             const isFav = favoriteIds.includes(story.id);
+            const hasRecordedAudio = Boolean(story.audioUrl && story.audioUrl.trim().length > 5);
 
             return (
               <div
@@ -128,6 +131,14 @@ export const StoryLibrary: React.FC<StoryLibraryProps> = ({
                     {story.category.replace(/-/g, ' ')}
                   </span>
 
+                  {/* Badge de Voz Oficial Gravada */}
+                  {hasRecordedAudio && (
+                    <span className="absolute top-3 left-28 px-2.5 py-0.5 rounded-full bg-[#D4AF37] text-[#1A1A1A] font-extrabold text-[9px] uppercase tracking-wider shadow-md flex items-center gap-1">
+                      <Mic className="w-2.5 h-2.5" />
+                      <span>{t('common', 'officialVoice')}</span>
+                    </span>
+                  )}
+
                   {/* Botão de Favoritar */}
                   <button
                     onClick={() => onToggleFavorite(story.id)}
@@ -141,12 +152,12 @@ export const StoryLibrary: React.FC<StoryLibraryProps> = ({
                   <div className="absolute bottom-2 left-3 right-3 flex items-center gap-3 text-[11px] text-[#F9E79F] font-semibold">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
-                      {story.readingTimeMinutes} min de leitura
+                      {story.readingTimeMinutes} {t('common', 'minRead')}
                     </span>
                     <span>•</span>
                     <span className="flex items-center gap-1">
                       <Headphones className="w-3.5 h-3.5 text-rose-400" />
-                      {Math.round(story.audioDurationSec / 60)} min em áudio
+                      {Math.round(story.audioDurationSec / 60)} {t('common', 'minAudio')}
                     </span>
                   </div>
                 </div>
@@ -168,8 +179,8 @@ export const StoryLibrary: React.FC<StoryLibraryProps> = ({
                       onClick={() => onListenStory(story)}
                       className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#1A1A1A] font-bold text-xs shadow-gold hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-1.5"
                     >
-                      <Headphones className="w-3.5 h-3.5" />
-                      <span>Ouvir</span>
+                      {hasRecordedAudio ? <Mic className="w-3.5 h-3.5" /> : <Headphones className="w-3.5 h-3.5" />}
+                      <span>{hasRecordedAudio ? t('common', 'listenAudio') : t('common', 'listenAudio')}</span>
                     </button>
 
                     <button
@@ -177,7 +188,7 @@ export const StoryLibrary: React.FC<StoryLibraryProps> = ({
                       className="flex-1 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-xs hover:bg-white/20 active:scale-95 transition flex items-center justify-center gap-1.5"
                     >
                       <BookOpen className="w-3.5 h-3.5" />
-                      <span>Ler</span>
+                      <span>{t('common', 'readText')}</span>
                     </button>
                   </div>
                 </div>

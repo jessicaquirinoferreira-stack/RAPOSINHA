@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { LanguageProvider } from './i18n/LanguageContext.tsx';
 
 // Ignora erros de WebSocket decorrentes do HMR desabilitado no ambiente de preview do AI Studio
 if (typeof window !== 'undefined') {
@@ -28,4 +29,8 @@ if (typeof window !== 'undefined') {
   });
 }
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(
+  <LanguageProvider>
+    <App />
+  </LanguageProvider>
+);

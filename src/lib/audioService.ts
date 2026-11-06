@@ -1,4 +1,6 @@
-// Audio Service com suporte a arquivos MP3/WAV e Sintetizador Encantado Medieval com Web Audio API
+// Audio Service com suporte a arquivos MP3/AAC/WAV e Trilha de Fundo Temática Procedural
+import { atmosphereEngine } from './atmosphereService';
+import { StoryCategory } from '../types';
 
 type AudioStateListener = (state: {
   isPlaying: boolean;
@@ -6,21 +8,22 @@ type AudioStateListener = (state: {
   duration: number;
   playbackRate: number;
   isSynthesized: boolean;
+  category: StoryCategory;
 }) => void;
 
 class EnchantedAudioEngine {
   private audioElement: HTMLAudioElement | null = null;
   private audioCtx: AudioContext | null = null;
   private synthInterval: number | null = null;
-  private synthGainNode: GainNode | null = null;
   private listeners: Set<AudioStateListener> = new Set();
   
   private isPlaying = false;
   private currentTime = 0;
-  private duration = 300; // default 5 min
+  private duration = 300;
   private playbackRate = 1.0;
   private isSynthesized = false;
   private currentStoryId: string | null = null;
+  private currentCategory: StoryCategory = 'floresta-encantada';
   private sleepTimerId: number | null = null;
 
   constructor() {
@@ -62,6 +65,7 @@ class EnchantedAudioEngine {
       duration: this.duration,
       playbackRate: this.playbackRate,
       isSynthesized: this.isSynthesized,
+      category: this.currentCategory,
     };
   }
 
@@ -70,7 +74,9 @@ class EnchantedAudioEngine {
     this.listeners.forEach(fn => fn(state));
   }
 
-  public async loadAndPlay(storyId: string, audioUrl?: string, nominalDuration = 300) {
+  public async loadAndPlay(storyId: string, audioUrl?: string, nominalDuration = 300, category: StoryCategory = 'floresta-encantada') {
+    this.currentCategory = category;
+
     if (this.currentStoryId === storyId && (this.isPlaying || this.currentTime > 0)) {
       if (!this.isPlaying) {
         this.resume();
@@ -83,7 +89,7 @@ class EnchantedAudioEngine {
     this.duration = nominalDuration || 300;
     this.currentTime = 0;
 
-    // Se houver uma URL de áudio real carregada
+    // Se houver uma URL de áudio real gravada da narradora
     if (audioUrl && audioUrl.trim().length > 5 && !audioUrl.startsWith('synth:')) {
       this.isSynthesized = false;
       if (this.audioElement) {
@@ -92,16 +98,24 @@ class EnchantedAudioEngine {
         try {
           await this.audioElement.play();
           this.isPlaying = true;
+
+          // Inicia a atmosfera temática no fundo com volume suave (mais baixo que a voz)
+          atmosphereEngine.startForStory(category);
+
           this.notify();
           return;
         } catch (e) {
-          console.warn('Falha ao reproduzir áudio externo, ativando Sintetizador Encantado:', e);
+          console.warn('Falha ao reproduzir áudio gravado, ativando fundo temático:', e);
         }
       }
     }
 
-    // Caso não haja URL ou falhe, toca a melodia encantada medieval sintética
-    this.startEnchantedSynthesizer();
+    // Caso não haja arquivo gravado, toca a atmosfera temática pura da história
+    this.isSynthesized = true;
+    this.isPlaying = true;
+    atmosphereEngine.startForStory(category);
+    this.startProgressTicker();
+    this.notify();
   }
 
   public resume() {
@@ -110,12 +124,17 @@ class EnchantedAudioEngine {
     if (!this.isSynthesized && this.audioElement && this.audioElement.src) {
       this.audioElement.play().then(() => {
         this.isPlaying = true;
+        atmosphereEngine.resume();
         this.notify();
       }).catch(() => {
-        this.startEnchantedSynthesizer();
+        this.startProgressTicker();
+        atmosphereEngine.resume();
       });
     } else {
-      this.startEnchantedSynthesizer();
+      this.isPlaying = true;
+      atmosphereEngine.resume();
+      this.startProgressTicker();
+      this.notify();
     }
   }
 
@@ -128,6 +147,7 @@ class EnchantedAudioEngine {
       window.clearInterval(this.synthInterval);
       this.synthInterval = null;
     }
+    atmosphereEngine.pause();
     this.notify();
   }
 
@@ -137,6 +157,7 @@ class EnchantedAudioEngine {
     if (this.audioElement) {
       this.audioElement.currentTime = 0;
     }
+    atmosphereEngine.pause();
     this.notify();
   }
 
@@ -176,86 +197,19 @@ class EnchantedAudioEngine {
     }
   }
 
-  // Sintetizador Mágico de Harpa e Flauta Medieval
-  private startEnchantedSynthesizer() {
-    this.isSynthesized = true;
-    this.isPlaying = true;
-
-    try {
-      if (!this.audioCtx) {
-        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        this.audioCtx = new AudioContextClass();
-      }
-
-      if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume();
-      }
-
-      // Escala pentatônica celta / de conto de fadas (Hz)
-      const enchantedNotes = [
-        261.63, // C4 (Dó)
-        293.66, // D4 (Ré)
-        329.63, // E4 (Mi)
-        392.00, // G4 (Sol)
-        440.00, // A4 (Lá)
-        523.25, // C5 (Dó agudo)
-        587.33, // D5
-        659.25, // E5
-        783.99, // G5 (Campanilha)
-      ];
-
-      const playChime = () => {
-        if (!this.audioCtx || !this.isPlaying) return;
-
-        const osc = this.audioCtx.createOscillator();
-        const gain = this.audioCtx.createGain();
-
-        // Escolhe notas harmoniosas
-        const note = enchantedNotes[Math.floor(Math.random() * enchantedNotes.length)];
-        osc.type = Math.random() > 0.4 ? 'sine' : 'triangle';
-        osc.frequency.setValueAtTime(note, this.audioCtx.currentTime);
-
-        // Curva suave de harpa / campana
-        gain.gain.setValueAtTime(0.0001, this.audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.12, this.audioCtx.currentTime + 0.08);
-        gain.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 2.2);
-
-        osc.connect(gain);
-        gain.connect(this.audioCtx.destination);
-
-        osc.start();
-        osc.stop(this.audioCtx.currentTime + 2.3);
-      };
-
-      // Toca a primeira nota
-      playChime();
-
-      if (this.synthInterval) {
-        window.clearInterval(this.synthInterval);
-      }
-
-      // Atualiza o tempo e dispara notas
-      this.synthInterval = window.setInterval(() => {
-        if (!this.isPlaying) return;
-
-        this.currentTime += 0.5 * this.playbackRate;
-        if (this.currentTime >= this.duration) {
-          this.stop();
-          return;
-        }
-
-        // 35% de chance a cada meio segundo de soar um acorde de harpa
-        if (Math.random() < 0.45) {
-          playChime();
-        }
-
-        this.notify();
-      }, 500);
-
-      this.notify();
-    } catch (e) {
-      console.error('Erro no Sintetizador de Áudio Encantado:', e);
+  private startProgressTicker() {
+    if (this.synthInterval) {
+      window.clearInterval(this.synthInterval);
     }
+    this.synthInterval = window.setInterval(() => {
+      if (!this.isPlaying) return;
+      this.currentTime += 0.5 * this.playbackRate;
+      if (this.currentTime >= this.duration) {
+        this.stop();
+        return;
+      }
+      this.notify();
+    }, 500);
   }
 }
 

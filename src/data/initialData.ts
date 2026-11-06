@@ -2,6 +2,13 @@ import { Story, AppSettings, CategoryInfo } from '../types';
 
 export const INITIAL_CATEGORIES: CategoryInfo[] = [
   {
+    id: 'floresta-encantada',
+    name: 'Floresta Encantada',
+    icon: '🦊',
+    description: 'Onde as raposinhas mágicas guardam os maiores segredos da natureza',
+    accentColor: '#2F4F4F',
+  },
+  {
     id: 'contos-de-fadas',
     name: 'Contos de Fadas',
     icon: '✨',
@@ -14,13 +21,6 @@ export const INITIAL_CATEGORIES: CategoryInfo[] = [
     icon: '👑',
     description: 'Aventuras reais em salões dourados e torres floridas',
     accentColor: '#F8C8DC',
-  },
-  {
-    id: 'floresta-encantada',
-    name: 'Floresta Encantada',
-    icon: '🦊',
-    description: 'Onde as raposinhas mágicas guardam os maiores segredos da natureza',
-    accentColor: '#2F4F4F',
   },
   {
     id: 'lendas-medievais',
@@ -48,22 +48,60 @@ export const INITIAL_SETTINGS: AppSettings = {
   storiesCountText: '+50 Contos Exclusivos em Áudio e Texto',
   perksList: [
     'Acesso ilimitado a todas as histórias em texto e áudio completo',
-    'Player de áudio com visualizador mágico e timer para dormir',
+    'Narração oficial acolhedora com voz doce e carinhosa de conto de fadas',
+    'Player de áudio com visualizador mágico e timer para o soninho',
     'Novos contos exclusivos adicionados semanalmente',
-    'Modo leitura com pergaminho medieval e modo noturno',
-    'Chat direto e carinhoso com a Tia Claudia (Administradora)',
+    'Tradução e narração completa em Português 🇧🇷, Espanhol 🇪🇸 e Inglês 🇺🇸',
     'Funciona 100% offline no seu celular como app nativo (PWA)',
   ],
 };
 
 export const INITIAL_STORIES: Story[] = [
   {
+    id: 'a-aventura-na-floresta-dos-murmurios-o-cha-da-artesa',
+    title: 'Aventuras na Floresta dos Murmúrios: O Chá da Artesã',
+    slug: 'aventuras-na-floresta-dos-murmurios-o-cha-da-artesa',
+    description: 'História oficial narrada pela voz acolhedora da narradora! Uma tarde com cheirinho de bolo de nozes, amoras doces e o reencontro na cabana mágica da artesã.',
+    coverUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80',
+    audioUrl: '/assets/aistudio/WhatsApp_Audio_2026-11-02_at_13.12.22_6bb551f8.aac',
+    audioDurationSec: 110, // 1 min 50s
+    category: 'floresta-encantada',
+    tags: ['Voz Oficial', 'Artesã', 'Amizade', 'Floresta dos Murmúrios'],
+    readingTimeMinutes: 3,
+    isPublished: true,
+    isFeatured: true,
+    views: 890,
+    listens: 1240,
+    createdAt: '2026-11-01T10:00:00Z',
+    updatedAt: '2026-11-02T13:12:00Z',
+    contentHtml: `
+<p class="leading-relaxed mb-4">Sabe, de todas as nossas aventuras pela Floresta dos Murmúrios, houve um dia em que o perigo não veio de tempestades nem de riachos bravos... veio de uma pequena distração na cozinha da artesã da floresta.</p>
+
+<p class="leading-relaxed mb-4">A tarde estava fresquinha, daquelas com cheiro de bolo de nozes e terra molhada. Eu tinha ido até a cabana da artesã, aquela casinha fofa, com coisas penduradas, frascos de vidro e luzinhas, para levar um relógio de bolso que precisava de um ajuste nos ponteiros.</p>
+
+<div class="my-6 p-4 rounded-xl border border-[#D4AF37]/50 bg-[#D4AF37]/15 text-center italic text-[#4A2C6A]">
+  "Mesmo nas tardes mais calmas, os pequenos detalhes guardam as maiores lições do coração."
+  <span class="block text-xs mt-1 text-[#8B6508]">— Caderno Secreto da Artesã da Floresta</span>
+</div>
+
+<p class="leading-relaxed mb-4">A artesã é a pessoa mais calma e acolhedora do mundo, mas naquele dia, ela pediu-me um favor: ir ali à clareira colher umas folhinhas de hortelã da lua para o nosso chá da tarde.</p>
+
+<p class="leading-relaxed mb-4">O problema é que no meio do caminho encontrei um arbusto cheio de amoras silvestres, mas tão bonitas e tão doces, que acabei por me distrair.</p>
+
+<p class="leading-relaxed mb-4">Quando dei por mim, o sol tinha sumido, a floresta ficou azulada e o meu telemóvel de bolso tinha ficado na oficina.</p>
+
+<p class="leading-relaxed mb-4">Ainda bem que a coruja Aurélia me encontrou e foi buscar o Juvenal e a corça Flor. Quando eles finalmente me acharam, voltamos todos juntos a rir para a cabana.</p>
+
+<p class="leading-relaxed mb-4">Sentamo-nos à volta da mesa de madeira rústica, bebemos o chá de estrelas bem quentinho e aprendi ali que até os sustos mais parvos se transformam em memórias doces quando temos os amigos certos para nos vir buscar.</p>
+    `,
+  },
+  {
     id: 'raposinha-e-o-castelo-de-ouro',
     title: 'A Raposinha e o Castelo de Ouro',
     slug: 'a-raposinha-e-o-castelo-de-ouro',
     description: 'No coração da Floresta dos Murmúrios, a jovem raposinha Aurelia descobre uma chave mágica perdida que abre os portões do palácio esquecido da Princesa Aurora.',
     coverUrl: 'https://images.unsplash.com/photo-1516934024742-b461fba47600?auto=format&fit=crop&w=800&q=80',
-    audioUrl: '', // uses enchanted synthesizer when empty
+    audioUrl: '',
     audioDurationSec: 420, // 7 min
     category: 'floresta-encantada',
     tags: ['Raposinha', 'Castelo', 'Amizade', 'Segredos'],

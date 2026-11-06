@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
-import { Download, Sparkles, X, Smartphone } from 'lucide-react';
+import { useLanguage } from '../../i18n/LanguageContext';
+import { Download, Sparkles, X } from 'lucide-react';
 
 interface PostSplashInstallModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface PostSplashInstallModalProps {
 
 export const PostSplashInstallModal: React.FC<PostSplashInstallModalProps> = ({ isOpen, onClose }) => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const { t } = useLanguage();
   const [showGuide, setShowGuide] = useState(false);
 
   if (!isOpen || isInstalled) return null;
@@ -45,13 +47,13 @@ export const PostSplashInstallModal: React.FC<PostSplashInstallModalProps> = ({ 
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 text-[11px] font-bold text-[#F9E79F] mb-1">
             <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-            <span>Bem-vindo ao Reino Encantado!</span>
+            <span>{t('splash', 'badge')}</span>
           </div>
           <h3 className="font-serif-royal text-xl font-extrabold text-[#FDF6E3]">
-            Instale o Aplicativo
+            {t('pwa', 'modalTitle')}
           </h3>
           <p className="text-xs text-white/80 mt-1">
-            Para uma experiência imersiva de conto de fadas em tela cheia e sem barras de navegador.
+            {t('pwa', 'modalSubtitle')}
           </p>
         </div>
 
@@ -61,20 +63,20 @@ export const PostSplashInstallModal: React.FC<PostSplashInstallModalProps> = ({ 
               <>
                 <div className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-[#D4AF37] text-[#1A1A1A] font-bold flex items-center justify-center shrink-0">1</span>
-                  <span>Toque em <strong>Compartilhar</strong> no Safari.</span>
+                  <span>{t('pwa', 'iosStep1')}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-[#D4AF37] text-[#1A1A1A] font-bold flex items-center justify-center shrink-0">2</span>
-                  <span>Selecione <strong>Adicionar à Tela de Início</strong>.</span>
+                  <span>{t('pwa', 'iosStep2')}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-[#D4AF37] text-[#1A1A1A] font-bold flex items-center justify-center shrink-0">3</span>
-                  <span>Toque em <strong>Adicionar</strong>. Pronto!</span>
+                  <span>{t('pwa', 'iosStep3')}</span>
                 </div>
               </>
             ) : (
               <p className="text-xs text-[#FDF6E3] leading-relaxed">
-                Clique no botão abaixo ou abra o menu de opções do seu navegador (três pontos) e selecione <strong>"Instalar aplicativo"</strong>.
+                {t('pwa', 'androidStep1')} {t('pwa', 'androidStep2')} {t('pwa', 'androidStep3')}
               </p>
             )}
           </div>
@@ -86,14 +88,14 @@ export const PostSplashInstallModal: React.FC<PostSplashInstallModalProps> = ({ 
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F9E79F] to-[#AA7C11] text-[#1A1A1A] font-extrabold text-sm shadow-gold hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2"
           >
             <Download className="w-4 h-4" />
-            <span>Instalar na Página Inicial ✨</span>
+            <span>{t('pwa', 'directInstallBtn')} ✨</span>
           </button>
 
           <button
             onClick={onClose}
             className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 font-semibold text-xs hover:bg-white/10 hover:text-white transition"
           >
-            Continuar Navegando no Site
+            {t('pwa', 'skipBtn')}
           </button>
         </div>
       </div>

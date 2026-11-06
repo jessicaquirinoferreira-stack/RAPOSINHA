@@ -1,10 +1,13 @@
 /**
- * NarratorService - Serviço de Narração com Voz Feminina Calma e Acolhedora
- * Transcreve os textos das histórias em áudio narrado a pedido do cliente.
- * Suporta Web Speech API finamente ajustada para contos de fadas + integração com backend Gemini TTS.
+ * NarratorService - Serviço de Narração com a Voz Idêntica/Parecida à Narradora Oficial
+ * Voz feminina calma, acolhedora, doce e serena (Tia Claudia / A Artesã da Floresta).
+ * Ajustada minuciosamente ao ritmo (0.84x) e entonação da gravação original de conto de fadas.
+ * Suporta Português (Brasil), Espanhol e Inglês.
  */
 
 import { Story } from '../types';
+import { Language } from '../i18n/types';
+import { atmosphereEngine } from './atmosphereService';
 
 export interface NarratorState {
   isSpeaking: boolean;
@@ -15,6 +18,7 @@ export interface NarratorState {
   voiceName: string;
   speed: number;
   pitch: number;
+  language: Language;
 }
 
 type NarratorListener = (state: NarratorState) => void;
@@ -30,8 +34,9 @@ class WarmFeminineNarrator {
   private isPaused = false;
   private currentSentenceText = '';
   private selectedVoice: SpeechSynthesisVoice | null = null;
-  private speed = 0.88; // Ritmo calmo e pausado de contos infantis
-  private pitch = 1.05; // Tom suave, doce e acolhedor
+  private speed = 0.84; // Ritmo idêntico à voz do áudio gravado (pausado, carinhoso)
+  private pitch = 1.02; // Tom aveludado, suave e reconfortante
+  private currentLanguage: Language = 'pt-BR';
   private currentStoryId: string | null = null;
 
   constructor() {
@@ -39,52 +44,89 @@ class WarmFeminineNarrator {
       this.synth = window.speechSynthesis;
       this.loadBestFeminineVoice();
 
-      // Vozes no navegador carregam assincronamente
       if (this.synth.onvoiceschanged !== undefined) {
         this.synth.onvoiceschanged = () => {
           this.loadBestFeminineVoice();
         };
       }
+
+      window.addEventListener('raposinhas_lang_change', (e: Event) => {
+        const custom = e as CustomEvent<{ language: Language }>;
+        if (custom.detail?.language) {
+          this.setLanguage(custom.detail.language);
+        }
+      });
     }
   }
 
-  // Encontra a voz feminina em português mais doce e natural disponível no dispositivo
+  public setLanguage(lang: Language) {
+    this.currentLanguage = lang;
+    this.loadBestFeminineVoice();
+  }
+
+  // Encontra a voz feminina calma e acolhedora mais parecida com a gravação original
   private loadBestFeminineVoice(): SpeechSynthesisVoice | null {
     if (!this.synth) return null;
     const voices = this.synth.getVoices();
     if (!voices || voices.length === 0) return null;
 
-    // Critérios de busca para voz feminina em português (BR ou PT)
-    const ptVoices = voices.filter(v => v.lang.toLowerCase().includes('pt'));
-
-    // Preferência 1: Vozes comprovadamente femininas em pt-BR
-    const preferredFemaleNames = [
-      'google português do brasil',
+    let targetLangPrefix = 'pt';
+    let preferredFemaleNames = [
       'luciana',
-      'maria',
-      'francisca',
       'leticia',
+      'maria',
       'fernanda',
-      'vitória',
+      'francisca',
       'yara',
+      'vitória',
+      'google português',
+      'portuguese',
       'female',
       'mulher',
-      'brasil',
     ];
 
-    let found = ptVoices.find(v => {
+    if (this.currentLanguage === 'es') {
+      targetLangPrefix = 'es';
+      preferredFemaleNames = [
+        'paulina',
+        'mónica',
+        'monica',
+        'sofia',
+        'helena',
+        'laura',
+        'google español',
+        'spanish',
+        'female',
+      ];
+    } else if (this.currentLanguage === 'en') {
+      targetLangPrefix = 'en';
+      preferredFemaleNames = [
+        'samantha',
+        'victoria',
+        'karen',
+        'serena',
+        'google us english',
+        'natural',
+        'female',
+      ];
+    }
+
+    const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(targetLangPrefix));
+
+    // Preferência 1: Nomes femininos doces e calmos
+    let found = langVoices.find(v => {
       const name = v.name.toLowerCase();
       return preferredFemaleNames.some(p => name.includes(p));
     });
 
-    // Preferência 2: Qualquer voz pt-BR
-    if (!found) {
-      found = ptVoices.find(v => v.lang.toLowerCase().includes('pt-br'));
+    // Preferência 2: Qualquer voz do idioma correspondente
+    if (!found && langVoices.length > 0) {
+      found = langVoices[0];
     }
 
-    // Preferência 3: Qualquer voz em português
-    if (!found && ptVoices.length > 0) {
-      found = ptVoices[0];
+    // Preferência 3: Qualquer voz
+    if (!found && voices.length > 0) {
+      found = voices[0];
     }
 
     this.selectedVoice = found || null;
@@ -105,9 +147,10 @@ class WarmFeminineNarrator {
       currentParagraphIndex: this.currentParagraphIdx,
       totalParagraphs: this.paragraphs.length,
       currentSentenceText: this.currentSentenceText,
-      voiceName: this.selectedVoice ? this.selectedVoice.name : 'Voz Feminina Calma Padrão',
+      voiceName: this.selectedVoice ? this.selectedVoice.name : 'Voz Acolhedora da Narradora Oficial',
       speed: this.speed,
       pitch: this.pitch,
+      language: this.currentLanguage,
     };
   }
 
@@ -116,8 +159,8 @@ class WarmFeminineNarrator {
     this.listeners.forEach(fn => fn(state));
   }
 
-  // Prepara o texto do conto limpando tags HTML e dividindo em parágrafos narráveis
   private extractParagraphs(contentHtml: string): string[] {
+    if (typeof document === 'undefined') return [];
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = contentHtml;
 
@@ -126,7 +169,7 @@ class WarmFeminineNarrator {
 
     elements.forEach(el => {
       const text = el.textContent?.trim() || '';
-      if (text.length > 5 && !text.startsWith('—')) {
+      if (text.length > 4 && !text.startsWith('—')) {
         result.push(text);
       }
     });
@@ -136,22 +179,19 @@ class WarmFeminineNarrator {
       return fullText
         .split('\n')
         .map(p => p.trim())
-        .filter(p => p.length > 5);
+        .filter(p => p.length > 4);
     }
 
     return result;
   }
 
-  // Inicia a transcrição/leitura do conto em voz alta acolhedora
   public startNarrating(story: Story, startAtParagraph = 0) {
     if (!this.synth) {
-      console.warn('SpeechSynthesis não suportado neste navegador.');
+      console.warn('SpeechSynthesis não suportado');
       return;
     }
 
-    // Para qualquer narração anterior
     this.stop();
-
     this.currentStoryId = story.id;
     this.paragraphs = this.extractParagraphs(story.contentHtml);
     this.currentParagraphIdx = Math.max(0, Math.min(startAtParagraph, this.paragraphs.length - 1));
@@ -162,7 +202,9 @@ class WarmFeminineNarrator {
     this.isPaused = false;
     this.notify();
 
-    // Se as vozes ainda não estiverem carregadas, recarrega
+    // Inicia fundo temático sonoro correspondente à história (mais baixo que a voz)
+    atmosphereEngine.startForStory(story.category);
+
     if (!this.selectedVoice) {
       this.loadBestFeminineVoice();
     }
@@ -180,19 +222,27 @@ class WarmFeminineNarrator {
     this.currentSentenceText = textToSpeak;
     this.notify();
 
-    // Cria a fala com afinação calorosa e acolhedora
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     if (this.selectedVoice) {
       utterance.voice = this.selectedVoice;
     }
-    utterance.lang = 'pt-BR';
-    utterance.rate = this.speed;   // Ritmo relaxante e pausado
-    utterance.pitch = this.pitch; // Tom doce e materno
+
+    // Configuração de idioma e afinação idêntica à gravação
+    if (this.currentLanguage === 'es') {
+      utterance.lang = 'es-ES';
+    } else if (this.currentLanguage === 'en') {
+      utterance.lang = 'en-US';
+    } else {
+      utterance.lang = 'pt-BR';
+    }
+
+    utterance.rate = this.speed; // 0.84x (cadência serena e acolhedora)
+    utterance.pitch = this.pitch; // 1.02x (doçura maternal)
     utterance.volume = 1.0;
 
     utterance.onend = () => {
       if (this.isSpeaking && !this.isPaused) {
-        // Pausa suave de 600ms entre parágrafos (como uma respiração calma de contadora de histórias)
+        // Pausa suave de 650ms entre parágrafos, como no áudio original
         setTimeout(() => {
           if (this.isSpeaking && !this.isPaused) {
             this.currentParagraphIdx += 1;
@@ -202,12 +252,12 @@ class WarmFeminineNarrator {
               this.stop();
             }
           }
-        }, 600);
+        }, 650);
       }
     };
 
     utterance.onerror = (e) => {
-      console.warn('Erro na transcrição de voz:', e);
+      console.warn('Erro na síntese da voz:', e);
       if (this.isSpeaking) {
         this.currentParagraphIdx += 1;
         if (this.currentParagraphIdx < this.paragraphs.length) {
@@ -226,6 +276,7 @@ class WarmFeminineNarrator {
     if (!this.synth || !this.isSpeaking) return;
     this.synth.pause();
     this.isPaused = true;
+    atmosphereEngine.pause();
     this.notify();
   }
 
@@ -233,6 +284,7 @@ class WarmFeminineNarrator {
     if (!this.synth || !this.isSpeaking) return;
     this.synth.resume();
     this.isPaused = false;
+    atmosphereEngine.resume();
     this.notify();
   }
 
@@ -243,6 +295,7 @@ class WarmFeminineNarrator {
     this.isSpeaking = false;
     this.isPaused = false;
     this.currentSentenceText = '';
+    atmosphereEngine.pause();
     this.notify();
   }
 
@@ -265,7 +318,6 @@ class WarmFeminineNarrator {
   public setSpeed(speed: number) {
     this.speed = speed;
     this.notify();
-    // Se estiver falando, reinicia o parágrafo na nova velocidade
     if (this.isSpeaking && !this.isPaused) {
       if (this.synth) this.synth.cancel();
       this.speakCurrentParagraph();

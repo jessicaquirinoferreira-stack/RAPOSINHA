@@ -30,8 +30,10 @@ import { AdminSettingsManager } from './components/admin/AdminSettingsManager';
 import { AdminUsersManager } from './components/admin/AdminUsersManager';
 import { LoginAreaView } from './components/auth/LoginAreaView';
 import { INITIAL_SETTINGS } from './data/initialData';
+import { useLanguage } from './i18n/LanguageContext';
 
 export default function App() {
+  const { t, language } = useLanguage();
   const [showSplash, setShowSplash] = useState(true);
   const [showPostSplashInstall, setShowPostSplashInstall] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(getCurrentUser());
@@ -298,16 +300,18 @@ export default function App() {
             ) : (
               <div className="p-8 text-center rounded-3xl bg-[#24133A] border-2 border-dashed border-[#D4AF37]/50 text-[#FDF6E3] space-y-4 my-6">
                 <span className="text-4xl block">✨</span>
-                <h3 className="font-serif-royal text-lg font-bold">Faça Login para Salvar Seus Contos</h3>
+                <h3 className="font-serif-royal text-lg font-bold">
+                  {language === 'en' ? 'Sign In to Save Your Tales' : language === 'es' ? 'Inicia Sesión para Guardar Tus Cuentos' : 'Faça Login para Salvar Seus Contos'}
+                </h3>
                 <p className="text-xs text-white/70 max-w-xs mx-auto">
-                  Acesse sua conta para guardar suas histórias favoritas em um só lugar.
+                  {language === 'en' ? 'Access your account to keep all your favorite stories in one place.' : language === 'es' ? 'Accede a tu cuenta para guardar tus historias favoritas.' : 'Acesse sua conta para guardar suas histórias favoritas em um só lugar.'}
                 </p>
                 <div className="flex gap-2 justify-center pt-2">
                   <button
                     onClick={() => handleOpenLogin('client')}
                     className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#1A1A1A] font-bold text-xs shadow-gold"
                   >
-                    Acessar Conta de Cliente
+                    {t('auth', 'clientTab')}
                   </button>
                 </div>
               </div>
@@ -327,15 +331,17 @@ export default function App() {
             ) : (
               <div className="p-8 text-center rounded-3xl bg-[#24133A] border border-[#D4AF37]/50 text-[#FDF6E3] space-y-4 my-6">
                 <span className="text-4xl block">👑</span>
-                <h3 className="font-serif-royal text-lg font-bold">Linha Direta com a Tia Claudia</h3>
+                <h3 className="font-serif-royal text-lg font-bold">
+                  {language === 'en' ? 'Direct Line with Aunt Claudia' : language === 'es' ? 'Línea Directa con Tía Claudia' : 'Linha Direta com a Tia Claudia'}
+                </h3>
                 <p className="text-xs text-white/70 max-w-xs mx-auto">
-                  Para conversar diretamente com a autora dos contos, faça login na sua conta.
+                  {language === 'en' ? 'To chat directly with the storyteller, please sign in.' : language === 'es' ? 'Para conversar con la autora, inicia sesión.' : 'Para conversar diretamente com a autora dos contos, faça login na sua conta.'}
                 </p>
                 <button
                   onClick={() => handleOpenLogin('client')}
                   className="px-5 py-2.5 rounded-xl bg-[#D4AF37] text-[#1A1A1A] font-bold text-xs"
                 >
-                  Entrar no Chat do Clube
+                  {language === 'en' ? 'Sign In to Chat' : language === 'es' ? 'Entrar al Chat' : 'Entrar no Chat do Clube'}
                 </button>
               </div>
             )
@@ -360,16 +366,16 @@ export default function App() {
                     {settings.planName}
                   </h2>
                   <div className="text-3xl font-extrabold text-[#D4AF37]">
-                    R$ {settings.monthlyPrice.toFixed(2).replace('.', ',')} <span className="text-xs text-white/70">/mês</span>
+                    {language === 'en' ? 'US$' : language === 'es' ? 'US$' : 'R$'} {settings.monthlyPrice.toFixed(2).replace('.', ',')} <span className="text-xs text-white/70">/{language === 'en' ? 'month' : language === 'es' ? 'mes' : 'mês'}</span>
                   </div>
                   <p className="text-xs text-white/70 max-w-xs mx-auto">
-                    Acesso completo e ilimitado a todas as histórias em texto e áudios com harpas e flautas medievais.
+                    {t('landing', 'cancelAnytime')}
                   </p>
                   <button
                     onClick={() => setIsCheckoutOpen(true)}
                     className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#1A1A1A] font-bold text-sm shadow-gold active:scale-95 transition"
                   >
-                    Assinar com InfinitePay Agora
+                    {t('landing', 'subscribeBtn')}
                   </button>
                 </div>
               </div>

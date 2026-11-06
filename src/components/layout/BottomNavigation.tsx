@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActiveTab, User } from '../../types';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { 
   Home, 
   BookOpen, 
@@ -23,6 +24,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   currentUser,
   unreadChatCount = 0,
 }) => {
+  const { t } = useLanguage();
   const isAdmin = currentUser?.role === 'admin' || currentUser?.email === 'claudia@x.com';
   const isSubscriber = currentUser && currentUser.subscriptionStatus === 'active';
 
@@ -33,22 +35,22 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
     navItems = [
       {
         tab: 'home',
-        label: 'Início',
+        label: t('nav', 'home'),
         icon: <Home className="w-5 h-5" />,
       },
       {
         tab: 'library',
-        label: 'Contos',
+        label: t('nav', 'library'),
         icon: <BookOpen className="w-5 h-5" />,
       },
       {
         tab: 'subscription',
-        label: 'Assinar',
+        label: t('nav', 'subscription'),
         icon: <Crown className="w-5 h-5 text-[#FFE082]" />,
       },
       {
         tab: 'login',
-        label: 'Entrar',
+        label: t('nav', 'login'),
         icon: <UserIcon className="w-5 h-5" />,
       },
     ];
@@ -57,28 +59,28 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
     navItems = [
       {
         tab: 'admin',
-        label: 'Painel',
+        label: t('nav', 'admin'),
         icon: <ShieldAlert className="w-5 h-5 text-[#FFE082]" />,
       },
       {
         tab: 'home',
-        label: 'Início',
+        label: t('nav', 'home'),
         icon: <Home className="w-5 h-5" />,
       },
       {
         tab: 'library',
-        label: 'Contos',
+        label: t('nav', 'library'),
         icon: <BookOpen className="w-5 h-5" />,
       },
       {
         tab: 'chat',
-        label: 'Chat',
+        label: t('nav', 'chat'),
         icon: <MessageCircle className="w-5 h-5" />,
         badge: unreadChatCount,
       },
       {
         tab: 'profile',
-        label: 'Perfil',
+        label: t('nav', 'profile'),
         icon: <UserIcon className="w-5 h-5" />,
       },
     ];
@@ -87,28 +89,28 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
     navItems = [
       {
         tab: 'home',
-        label: 'Início',
+        label: t('nav', 'home'),
         icon: <Home className="w-5 h-5" />,
       },
       {
         tab: 'library',
-        label: 'Contos',
+        label: t('nav', 'library'),
         icon: <BookOpen className="w-5 h-5" />,
       },
       {
         tab: 'favorites',
-        label: 'Favoritos',
+        label: t('nav', 'favorites'),
         icon: <Heart className="w-5 h-5" />,
       },
       {
         tab: 'chat',
-        label: 'Claudia',
+        label: t('nav', 'chat'),
         icon: <MessageCircle className="w-5 h-5" />,
         badge: unreadChatCount,
       },
       {
         tab: 'profile',
-        label: 'Perfil',
+        label: t('nav', 'profile'),
         icon: <UserIcon className="w-5 h-5" />,
       },
     ];

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { Download, Sparkles, X, Smartphone } from 'lucide-react';
 
 export const TopInstallBanner: React.FC = () => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const { t } = useLanguage();
   const [dismissed, setDismissed] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
 
@@ -32,10 +34,10 @@ export const TopInstallBanner: React.FC = () => {
           <div className="min-w-0">
             <div className="flex items-center gap-1 text-[10px] font-semibold text-[#F9E79F] uppercase tracking-wider">
               <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-              <span>Aplicativo Oficial PWA</span>
+              <span>{t('pwa', 'topBannerTitle')}</span>
             </div>
             <p className="text-xs font-serif-royal font-bold text-[#FDF6E3] truncate">
-              Instalar Clube das Raposinhas na Tela Inicial
+              {t('common', 'appName')}
             </p>
           </div>
         </div>
@@ -46,12 +48,12 @@ export const TopInstallBanner: React.FC = () => {
             className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#1A1A1A] font-extrabold text-xs shadow hover:brightness-110 active:scale-95 transition"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Instalar</span>
+            <span>{t('pwa', 'installButton')}</span>
           </button>
           <button
             onClick={() => setDismissed(true)}
             className="p-1 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition"
-            title="Fechar"
+            title={t('common', 'close')}
           >
             <X className="w-4 h-4" />
           </button>

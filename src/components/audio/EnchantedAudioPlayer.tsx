@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Story } from '../../types';
 import { audioEngine } from '../../lib/audioService';
 import { feminineNarrator, NarratorState } from '../../lib/narratorService';
+import { atmosphereEngine, ATMOSPHERE_THEMES } from '../../lib/atmosphereService';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { 
   Play, 
   Pause, 
@@ -17,7 +19,8 @@ import {
   SkipBack,
   SkipForward,
   BookOpen,
-  HeartHandshake
+  HeartHandshake,
+  Mic
 } from 'lucide-react';
 
 interface EnchantedAudioPlayerProps {
@@ -33,9 +36,16 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
   onClose,
   onOpenStoryText,
 }) => {
+  const { t } = useLanguage();
   const [audioState, setAudioState] = useState(audioEngine.getState());
   const [narratorState, setNarratorState] = useState<NarratorState>(feminineNarrator.getState());
-  const [playbackMode, setPlaybackMode] = useState<'narrator' | 'instrumental'>('narrator');
+  const [atmosphereState, setAtmosphereState] = useState(atmosphereEngine.getState());
+  
+  const hasRecordedAudio = Boolean(story?.audioUrl && story.audioUrl.trim().length > 5);
+  const [playbackMode, setPlaybackMode] = useState<'recorded' | 'narrator' | 'instrumental'>(
+    hasRecordedAudio ? 'recorded' : 'narrator'
+  );
+
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSleepTimerModal, setShowSleepTimerModal] = useState(false);
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number | null>(null);
@@ -56,20 +66,33 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
     return () => unsub();
   }, []);
 
+  // Escuta a ambiência e fundo sonoro do conto
+  useEffect(() => {
+    const unsub = atmosphereEngine.subscribe((state) => {
+      setAtmosphereState(state);
+    });
+    return () => unsub();
+  }, []);
+
   // Quando uma nova história é aberta no player
   useEffect(() => {
     if (story && isOpen) {
-      if (playbackMode === 'narrator') {
+      if (hasRecordedAudio) {
+        // Se tiver o áudio gravado pela narradora, toca o áudio original com a harmonia de fundo
+        setPlaybackMode('recorded');
+        feminineNarrator.stop();
+        audioEngine.loadAndPlay(story.id, story.audioUrl, story.audioDurationSec, story.category);
+      } else {
+        setPlaybackMode('narrator');
         audioEngine.pause();
         feminineNarrator.startNarrating(story, 0);
-      } else {
-        feminineNarrator.stop();
-        audioEngine.loadAndPlay(story.id, story.audioUrl, story.audioDurationSec);
       }
     }
   }, [story?.id, isOpen]);
 
   if (!story) return null;
+
+  const currentAtmosphereTheme = ATMOSPHERE_THEMES[story.category] || ATMOSPHERE_THEMES['floresta-encantada'];
 
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
@@ -77,14 +100,17 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
     return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
   };
 
-  const handleSwitchMode = (newMode: 'narrator' | 'instrumental') => {
+  const handleSwitchMode = (newMode: 'recorded' | 'narrator' | 'instrumental') => {
     setPlaybackMode(newMode);
     if (newMode === 'narrator') {
       audioEngine.pause();
       feminineNarrator.startNarrating(story, narratorState.currentParagraphIndex || 0);
+    } else if (newMode === 'recorded') {
+      feminineNarrator.stop();
+      audioEngine.loadAndPlay(story.id, story.audioUrl, story.audioDurationSec, story.category);
     } else {
-      feminineNarrator.pause();
-      audioEngine.loadAndPlay(story.id, story.audioUrl, story.audioDurationSec);
+      feminineNarrator.stop();
+      audioEngine.loadAndPlay(story.id, '', story.audioDurationSec, story.category); // síntese instrumental com tema
     }
   };
 
@@ -113,7 +139,7 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
     audioEngine.seek(target);
   };
 
-  const speeds = [0.75, 0.88, 1.0, 1.25];
+  const speeds = [0.75, 0.84, 1.0, 1.25];
   const cycleSpeed = () => {
     if (playbackMode === 'narrator') {
       const currentSpeed = narratorState.speed;
@@ -148,7 +174,7 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
     ? (narratorState.isSpeaking && !narratorState.isPaused)
     : audioState.isPlaying;
 
-  // Barra Flutuante Minimizada no Rodapé (quando o usuário navega pelo app enquanto ouve)
+  // Barra Flutuante Minimizada no Rodapé
   if (isMinimized) {
     return (
       <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-md rounded-2xl bg-gradient-to-r from-[#2F1C4A] via-[#4A2C6A] to-[#1F1233] border-2 border-[#D4AF37] p-2.5 shadow-2xl flex items-center justify-between animate-slide-up backdrop-blur-md">
@@ -166,12 +192,20 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
           </div>
           <div className="min-w-0">
             <h4 className="text-xs font-bold text-[#FDF6E3] truncate font-serif-royal">{story.title}</h4>
-            <div className="flex items-center gap-1.5 text-[10px] text-[#D4AF37]">
-              <span>{playbackMode === 'narrator' ? '🌸 Voz Calma' : '🎵 Harpa'}</span>
+            <div className="flex items-center gap-1.5 text-[10px] text-[#D4AF37] flex-wrap">
+              <span>
+                {playbackMode === 'recorded' 
+                  ? '🎙️ Voz Oficial' 
+                  : playbackMode === 'narrator' ? '🌸 Voz Calma' : '🎵 Harpa'}
+              </span>
+              <span>•</span>
+              <span className="text-white/80">
+                {currentAtmosphereTheme.icon} {currentAtmosphereTheme.name.split('&')[0]}
+              </span>
               <span>•</span>
               <span>
                 {playbackMode === 'narrator' 
-                  ? `Parágrafo ${(narratorState.currentParagraphIndex || 0) + 1}/${narratorState.totalParagraphs || 1}`
+                  ? `P ${(narratorState.currentParagraphIndex || 0) + 1}/${narratorState.totalParagraphs || 1}`
                   : `${formatTime(audioState.currentTime)} / ${formatTime(audioState.duration)}`
                 }
               </span>
@@ -244,9 +278,9 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
         <div className="text-center">
           <span className="text-[10px] uppercase font-bold tracking-widest text-[#D4AF37] flex items-center justify-center gap-1">
             <Sparkles className="w-3 h-3 text-[#FFE082]" />
-            Clube das Raposinhas
+            {t('common', 'appName')}
           </span>
-          <h3 className="text-xs font-serif-royal text-white/80">Reprodutor Mágico Encantado</h3>
+          <h3 className="text-xs font-serif-royal text-white/80">{t('player', 'title')}</h3>
         </div>
 
         <button
@@ -257,41 +291,55 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
           className="px-3 py-1.5 rounded-full border border-[#D4AF37]/50 text-xs font-bold text-[#F9E79F] bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 active:scale-95 transition flex items-center gap-1"
         >
           <BookOpen className="w-3.5 h-3.5" />
-          <span>Ler Texto</span>
+          <span>{t('player', 'readTextBtn')}</span>
         </button>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 max-w-sm mx-auto w-full">
-        {/* Seletor de Modo: Voz Feminina Calma vs Trilha Instrumental */}
+        {/* Seletor de Modo: Voz Gravada da Narradora vs Voz Calma Sintética vs Harpa */}
         <div className="w-full mb-4 p-1 rounded-2xl bg-black/40 border border-[#D4AF37]/40 flex items-center gap-1 shadow-inner">
+          {hasRecordedAudio && (
+            <button
+              onClick={() => handleSwitchMode('recorded')}
+              className={`flex-1 py-2 px-2 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition ${
+                playbackMode === 'recorded'
+                  ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#1A1A1A] shadow-md'
+                  : 'text-white/70 hover:text-white'
+              }`}
+            >
+              <Mic className="w-3.5 h-3.5" />
+              <span>🎙️ Voz Oficial</span>
+            </button>
+          )}
+
           <button
             onClick={() => handleSwitchMode('narrator')}
-            className={`flex-1 py-2 px-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition ${
+            className={`flex-1 py-2 px-2 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition ${
               playbackMode === 'narrator'
                 ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md'
                 : 'text-white/70 hover:text-white'
             }`}
           >
             <Volume2 className="w-3.5 h-3.5" />
-            <span>🌸 Voz Calma</span>
+            <span>{t('player', 'modeCalmVoice')}</span>
           </button>
 
           <button
             onClick={() => handleSwitchMode('instrumental')}
-            className={`flex-1 py-2 px-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition ${
+            className={`flex-1 py-2 px-2 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition ${
               playbackMode === 'instrumental'
                 ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#1A1A1A] shadow-md'
                 : 'text-white/70 hover:text-white'
             }`}
           >
             <Music className="w-3.5 h-3.5" />
-            <span>🎶 Harpa Mágica</span>
+            <span>{t('player', 'modeHarp')}</span>
           </button>
         </div>
 
         {/* Cover Art with Golden Glow */}
-        <div className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-3xl overflow-hidden p-2 shadow-2xl mb-4">
+        <div className="relative w-56 h-56 sm:w-60 sm:h-60 rounded-3xl overflow-hidden p-2 shadow-2xl mb-4">
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-[#D4AF37]/40 via-[#6B4C9A]/40 to-transparent blur-xl" />
           
           <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-[#D4AF37] shadow-inner bg-black">
@@ -303,7 +351,11 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
             {/* Story Seal */}
             <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-[#D4AF37]/50 text-[10px] font-semibold text-[#F9E79F] flex items-center gap-1">
               <span>🦊</span>
-              <span>{playbackMode === 'narrator' ? 'Voz Acolhedora' : 'Música Encantada'}</span>
+              <span>
+                {playbackMode === 'recorded' 
+                  ? 'Voz Original Gravada' 
+                  : playbackMode === 'narrator' ? 'Voz Feminina Calma' : 'Música Encantada'}
+              </span>
             </div>
           </div>
         </div>
@@ -315,7 +367,13 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
           </h2>
           <p className="text-xs text-[#D4AF37] font-medium flex items-center justify-center gap-1.5">
             <HeartHandshake className="w-3.5 h-3.5" />
-            <span>{playbackMode === 'narrator' ? 'Narrado com doçura por Claudia' : 'Composição de Ninar'}</span>
+            <span>
+              {playbackMode === 'recorded' 
+                ? 'Narrado com a voz oficial de Claudia (Gravação)'
+                : playbackMode === 'narrator' 
+                  ? t('player', 'narratedByClaudia') 
+                  : 'Composição de Ninar'}
+            </span>
           </p>
         </div>
 
@@ -325,7 +383,7 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
             <div className="flex items-center justify-between text-[11px] text-[#F8C8DC] font-bold mb-1.5">
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
-                Lendo agora:
+                {t('player', 'readingNow')}
               </span>
               <span>Parágrafo {(narratorState.currentParagraphIndex || 0) + 1} de {narratorState.totalParagraphs || 1}</span>
             </div>
@@ -351,14 +409,14 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
           ))}
         </div>
 
-        {/* Progress Slider (Modo Instrumental) ou Barra de Parágrafos (Modo Voz) */}
+        {/* Progress Slider (Modo Áudio / Gravado / Harpa) ou Barra de Parágrafos (Modo Sintetizador) */}
         <div className="w-full mb-5">
-          {playbackMode === 'instrumental' ? (
+          {playbackMode !== 'narrator' ? (
             <>
               <input
                 type="range"
                 min={0}
-                max={audioState.duration || 300}
+                max={audioState.duration || 110}
                 value={audioState.currentTime}
                 onChange={handleSeek}
                 className="w-full h-2 rounded-lg bg-white/15 accent-[#D4AF37] cursor-pointer"
@@ -393,7 +451,7 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
           <button
             onClick={cycleSpeed}
             className="w-10 h-10 rounded-full bg-white/10 text-xs font-bold text-[#F9E79F] hover:bg-white/20 active:scale-95 transition flex items-center justify-center"
-            title="Velocidade de reprodução"
+            title={t('player', 'speed')}
           >
             {playbackMode === 'narrator' ? `${narratorState.speed}x` : `${audioState.playbackRate}x`}
           </button>
@@ -461,7 +519,7 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
                 ? 'bg-[#D4AF37] text-[#1A1A1A] font-bold' 
                 : 'bg-white/10 text-white/80 hover:bg-white/20'
             }`}
-            title="Timer para Dormir"
+            title={t('player', 'sleepTimer')}
           >
             <Moon className="w-5 h-5" />
           </button>
@@ -471,9 +529,69 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
         {sleepTimerRemaining && (
           <div className="text-xs text-[#D4AF37] flex items-center gap-1.5 animate-pulse mb-2">
             <Clock className="w-3.5 h-3.5" />
-            <span>Pausará em {sleepTimerRemaining} minutos (Bons sonhos!)</span>
+            <span>{t('player', 'timerActiveNotice', { mins: sleepTimerRemaining })}</span>
           </div>
         )}
+
+        {/* Fundo Temático Suave (Sons e Harmonias no tema da história, mais baixo que a voz) */}
+        <div className="w-full mt-1 p-3 rounded-2xl bg-black/40 border border-[#D4AF37]/30 backdrop-blur-md text-xs shadow-inner">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl shrink-0 p-1 rounded-xl bg-white/5 border border-white/10">
+                {currentAtmosphereTheme.icon}
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold text-[#F9E79F] text-xs font-serif-royal truncate">
+                    {currentAtmosphereTheme.name}
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[9px] text-[#F9E79F] font-bold">
+                    {t('player', 'atmosphereSubordinateNotice')}
+                  </span>
+                </div>
+                <p className="text-[10px] text-white/70 line-clamp-1 mt-0.5">
+                  {currentAtmosphereTheme.description}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => atmosphereEngine.toggleEnabled()}
+              className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition shrink-0 flex items-center gap-1 ${
+                atmosphereState.isEnabled 
+                  ? 'border-[#D4AF37]/60 bg-[#D4AF37]/25 text-[#F9E79F] shadow-xs' 
+                  : 'border-white/20 bg-white/5 text-white/50'
+              }`}
+              title={atmosphereState.isEnabled ? t('player', 'atmosphereMute') : t('player', 'atmosphereUnmute')}
+            >
+              <Music className="w-3 h-3" />
+              <span>{atmosphereState.isEnabled ? 'Fundo Ativo' : 'Silenciado'}</span>
+            </button>
+          </div>
+
+          {/* Volume slider sutil para o fundo sonoro */}
+          {atmosphereState.isEnabled && (
+            <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+              <span className="text-[10px] text-white/60 shrink-0 flex items-center gap-1 font-medium">
+                <Volume2 className="w-3 h-3 text-[#D4AF37]" />
+                {t('player', 'atmosphereVolume')}:
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={0.35}
+                step={0.01}
+                value={atmosphereState.volume}
+                onChange={(e) => atmosphereEngine.setVolume(parseFloat(e.target.value))}
+                className="flex-1 h-1.5 rounded-lg bg-white/20 accent-[#D4AF37] cursor-pointer"
+                title="Ajuste do fundo temático (mantido suave abaixo da voz)"
+              />
+              <span className="text-[10px] font-mono text-[#F9E79F] shrink-0 font-bold">
+                {Math.round((atmosphereState.volume / 0.35) * 100)}%
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Sleep Timer Modal */}
@@ -484,10 +602,10 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
               🌙
             </div>
             <h3 className="font-serif-royal text-lg font-bold text-[#FDF6E3] mb-1">
-              Timer para o Soninho
+              {t('player', 'sleepTimerTitle')}
             </h3>
             <p className="text-xs text-white/70 mb-5">
-              Escolha quando o áudio e a voz devem desligar para as crianças dormirem tranquilas:
+              {t('player', 'sleepTimerDesc')}
             </p>
 
             <div className="grid grid-cols-2 gap-2.5 mb-5">
@@ -501,7 +619,7 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
                       : 'border-white/20 bg-white/5 text-white hover:bg-white/10'
                   }`}
                 >
-                  {mins} Minutos
+                  {mins} {t('player', 'minutesLabel')}
                 </button>
               ))}
             </div>
@@ -511,13 +629,13 @@ export const EnchantedAudioPlayer: React.FC<EnchantedAudioPlayerProps> = ({
                 onClick={() => handleSetSleepTimer(0)}
                 className="flex-1 py-2 rounded-xl border border-white/20 text-white/80 text-xs font-medium hover:bg-white/10"
               >
-                Desativar Timer
+                {t('player', 'disableTimer')}
               </button>
               <button
                 onClick={() => setShowSleepTimerModal(false)}
                 className="flex-1 py-2 rounded-xl bg-[#D4AF37] text-[#1A1A1A] text-xs font-bold"
               >
-                Fechar
+                {t('common', 'close')}
               </button>
             </div>
           </div>

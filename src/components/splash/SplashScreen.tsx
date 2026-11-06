@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { useLanguage } from '../../i18n/LanguageContext';
+import { LanguageSelector } from '../layout/LanguageSelector';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -7,12 +9,13 @@ interface SplashScreenProps {
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
   const [stage, setStage] = useState(0);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Sequência de animação mágica de abertura
     const t1 = setTimeout(() => setStage(1), 300);
-    const t2 = setTimeout(() => setStage(2), 1200);
-    const t3 = setTimeout(() => setStage(3), 2000);
+    const t2 = setTimeout(() => setStage(2), 1000);
+    const t3 = setTimeout(() => setStage(3), 1600);
 
     return () => {
       clearTimeout(t1);
@@ -46,12 +49,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         ))}
       </div>
 
-      {/* Top Badge */}
-      <div className={`transition-all duration-700 transform ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 backdrop-blur-md text-xs font-semibold text-[#F9E79F]">
+      {/* Top Bar with Language Selector */}
+      <div className={`w-full flex items-center justify-between transition-all duration-700 transform ${stage >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 backdrop-blur-md text-xs font-semibold text-[#F9E79F]">
           <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-          <span>Reino Encantado da Leitura & Áudio</span>
+          <span>{t('splash', 'badge')}</span>
         </div>
+
+        <LanguageSelector variant="compact" />
       </div>
 
       {/* Center Fox & Crown Mascot */}
@@ -77,10 +82,10 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         {/* Title and Subtitle */}
         <div className={`mt-8 transition-all duration-700 delay-300 transform ${stage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h1 className="font-serif-royal text-3xl sm:text-4xl font-extrabold text-[#FDF6E3] tracking-wide mb-2 leading-tight">
-            Clube das <span className="gold-gradient-text">Raposinhas</span>
+            {t('common', 'appName')}
           </h1>
           <p className="text-sm text-white/80 max-w-xs mx-auto font-medium">
-            Contos de fadas, princesas e fábulas medievais que encantam o coração.
+            {t('splash', 'subtitle')}
           </p>
         </div>
       </div>
@@ -91,13 +96,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
           onClick={onComplete}
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#F9E79F] to-[#AA7C11] text-[#1A1A1A] font-extrabold text-base shadow-gold hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 group"
         >
-          <span>Abrir Livro Encantado</span>
+          <span>{t('splash', 'openBook')}</span>
           <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
         </button>
-        <span className="block text-center text-[11px] text-white/50 mt-2.5">
-          Aplicativo Móvel Instalável (PWA)
+        <span className="block text-center text-[11px] text-[#F9E79F]/80 mt-2.5">
+          {t('splash', 'audioNotice')}
         </span>
       </div>
     </div>
   );
 };
+

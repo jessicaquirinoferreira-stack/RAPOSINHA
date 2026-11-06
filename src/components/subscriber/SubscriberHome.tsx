@@ -2,6 +2,7 @@ import React from 'react';
 import { Story, User, StoryCategory, AppSettings } from '../../types';
 import { INITIAL_CATEGORIES } from '../../data/initialData';
 import { PWAInstallPrompt } from '../pwa/PWAInstallPrompt';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { 
   Sparkles, 
   Headphones, 
@@ -12,7 +13,7 @@ import {
   ArrowRight, 
   MessageCircle, 
   Flame,
-  Star
+  Mic
 } from 'lucide-react';
 
 interface SubscriberHomeProps {
@@ -40,12 +41,15 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
   onOpenChat,
   onOpenLibrary,
 }) => {
+  const { t, language } = useLanguage();
   const featuredStory = stories.find(s => s.isFeatured) || stories[0];
   const bedtimeStories = stories.filter(s => s.category === 'historias-para-dormir');
-  const recentStories = stories.slice(0, 5);
+  const recentStories = stories.slice(0, 6);
+
+  const hasOriginalAudio = Boolean(featuredStory?.audioUrl && featuredStory.audioUrl.trim().length > 5);
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-6 pb-6 text-[#FDF6E3]">
       {/* Top Banner Notice */}
       {settings.bannerNotice && (
         <div className="p-2.5 rounded-2xl bg-gradient-to-r from-[#D4AF37]/20 via-[#F8C8DC]/20 to-[#6B4C9A]/20 border border-[#D4AF37]/40 text-center text-xs font-semibold text-[#F9E79F] flex items-center justify-center gap-1.5 shadow-sm">
@@ -59,17 +63,17 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
         <div>
           <span className="text-xs text-[#D4AF37] font-bold uppercase tracking-wider flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5" />
-            Reino Encantado
+            {language === 'en' ? 'Enchanted Realm' : language === 'es' ? 'Reino Encantado' : 'Reino Encantado'}
           </span>
           <h1 className="font-serif-royal text-xl sm:text-2xl font-extrabold text-[#FDF6E3] mt-0.5">
-            Olá, {currentUser.name || 'Pequena Raposinha'}! 🦊
+            {language === 'en' ? `Hello, ${currentUser.name || 'Little Fox'}! 🦊` : language === 'es' ? `¡Hola, ${currentUser.name || 'Zorrita'}! 🦊` : `Olá, ${currentUser.name || 'Pequena Raposinha'}! 🦊`}
           </h1>
         </div>
 
         {/* Status de Assinante Ativo */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold">
           <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-          <span>Clube Ativo</span>
+          <span>{language === 'en' ? 'Member' : language === 'es' ? 'Miembro' : 'Clube Ativo'}</span>
         </div>
       </div>
 
@@ -91,7 +95,7 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
             {/* Seal Tag */}
             <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#D4AF37] text-[#1A1A1A] font-bold text-xs flex items-center gap-1 shadow-md">
               <Flame className="w-3.5 h-3.5 fill-current" />
-              <span>Conto em Destaque da Semana</span>
+              <span>{hasOriginalAudio ? '🎙️ Voz Oficial da Narradora' : 'Conto em Destaque'}</span>
             </div>
 
             {/* Favorite Button */}
@@ -113,12 +117,12 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
                 <span>•</span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {featuredStory.readingTimeMinutes} min
+                  {featuredStory.readingTimeMinutes} {t('common', 'minutes')}
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
                   <Headphones className="w-3 h-3" />
-                  {Math.round(featuredStory.audioDurationSec / 60)} min
+                  {Math.round(featuredStory.audioDurationSec / 60)} {t('common', 'minutes')}
                 </span>
               </div>
 
@@ -135,8 +139,8 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
                   onClick={() => onListenStory(featuredStory)}
                   className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#1A1A1A] font-bold text-xs shadow-gold hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2"
                 >
-                  <Headphones className="w-4 h-4" />
-                  <span>Ouvir Narração</span>
+                  {hasOriginalAudio ? <Mic className="w-4 h-4" /> : <Headphones className="w-4 h-4" />}
+                  <span>{hasOriginalAudio ? 'Ouvir Voz Oficial' : t('common', 'listenAudio')}</span>
                 </button>
 
                 <button
@@ -144,7 +148,7 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
                   className="flex-1 py-2.5 rounded-xl bg-white/20 backdrop-blur-md text-white border border-white/30 font-bold text-xs hover:bg-white/30 active:scale-95 transition flex items-center justify-center gap-2"
                 >
                   <BookOpen className="w-4 h-4" />
-                  <span>Ler História</span>
+                  <span>{t('common', 'readText')}</span>
                 </button>
               </div>
             </div>
@@ -157,13 +161,13 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-serif-royal text-base font-bold text-[#FDF6E3] flex items-center gap-2">
             <span>🏰</span>
-            <span>Explorar por Reinos & Temas</span>
+            <span>{language === 'en' ? 'Explore Realms & Themes' : language === 'es' ? 'Explorar por Reinos & Temas' : 'Explorar por Reinos & Temas'}</span>
           </h3>
           <button
             onClick={onOpenLibrary}
             className="text-xs font-bold text-[#D4AF37] hover:underline flex items-center gap-1"
           >
-            <span>Ver Biblioteca</span>
+            <span>{language === 'en' ? 'View Library' : language === 'es' ? 'Ver Biblioteca' : 'Ver Biblioteca'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -180,7 +184,7 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
                 <h4 className="font-serif-royal text-xs font-bold text-[#FDF6E3]">
                   {cat.name}
                 </h4>
-                <p className="text-[10px] text-white/50">Toque para ver</p>
+                <p className="text-[10px] text-white/50">{language === 'en' ? 'Tap to view' : language === 'es' ? 'Toca para ver' : 'Toque para ver'}</p>
               </div>
             </button>
           ))}
@@ -195,10 +199,10 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
               <span className="text-xl">🌙</span>
               <div>
                 <h3 className="font-serif-royal text-sm font-bold text-[#FDF6E3]">
-                  Para a Hora de Dormir
+                  {language === 'en' ? 'Bedtime Calm Tales' : language === 'es' ? 'Cuentos para Dormir' : 'Para a Hora de Dormir'}
                 </h3>
                 <p className="text-[10px] text-white/60">
-                  Áudios calmos com timer de sono para uma noite tranquila
+                  {language === 'en' ? 'Gentle narration and sleep timer' : language === 'es' ? 'Audios suaves con temporizador' : 'Áudios calmos com timer de sono para uma noite tranquila'}
                 </p>
               </div>
             </div>
@@ -223,7 +227,7 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
                     </h4>
                     <p className="text-[10px] text-[#D4AF37] flex items-center gap-1 mt-0.5">
                       <Headphones className="w-3 h-3" />
-                      <span>{Math.round(story.audioDurationSec / 60)} min com Harpa Mágica</span>
+                      <span>{Math.round(story.audioDurationSec / 60)} {t('common', 'minAudio')}</span>
                     </p>
                   </div>
                 </div>
@@ -244,63 +248,72 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-serif-royal text-base font-bold text-[#FDF6E3] flex items-center gap-2">
             <span>📖</span>
-            <span>Contos Adicionados Recentemente</span>
+            <span>{language === 'en' ? 'Recently Added Tales' : language === 'es' ? 'Cuentos Añadidos Recientemente' : 'Contos Adicionados Recentemente'}</span>
           </h3>
         </div>
 
         <div className="grid grid-cols-2 gap-3.5">
-          {recentStories.map((story) => (
-            <div
-              key={story.id}
-              className="rounded-2xl bg-[#24133A] border border-[#D4AF37]/30 overflow-hidden shadow-md flex flex-col justify-between"
-            >
-              <div className="relative h-28 w-full">
-                <img
-                  src={story.coverUrl}
-                  alt={story.title}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  onClick={() => onToggleFavorite(story.id)}
-                  className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:text-rose-400"
-                >
-                  <Heart
-                    className={`w-3.5 h-3.5 ${
-                      favoriteIds.includes(story.id) ? 'fill-rose-500 text-rose-500' : 'text-white'
-                    }`}
+          {recentStories.map((story) => {
+            const isRecorded = Boolean(story.audioUrl && story.audioUrl.trim().length > 5);
+
+            return (
+              <div
+                key={story.id}
+                className="rounded-2xl bg-[#24133A] border border-[#D4AF37]/30 overflow-hidden shadow-md flex flex-col justify-between"
+              >
+                <div className="relative h-28 w-full">
+                  <img
+                    src={story.coverUrl}
+                    alt={story.title}
+                    className="w-full h-full object-cover"
                   />
-                </button>
-              </div>
-
-              <div className="p-3 flex-1 flex flex-col justify-between">
-                <div>
-                  <span className="text-[9px] font-bold text-[#D4AF37] uppercase block truncate">
-                    {story.category.replace(/-/g, ' ')}
-                  </span>
-                  <h4 className="font-serif-royal text-xs font-bold text-[#FDF6E3] line-clamp-2 mt-0.5">
-                    {story.title}
-                  </h4>
-                </div>
-
-                <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-white/10">
+                  {isRecorded && (
+                    <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-[#D4AF37] text-[#1A1A1A] font-extrabold text-[8px] uppercase tracking-wider shadow">
+                      🎙️ Voz Oficial
+                    </span>
+                  )}
                   <button
-                    onClick={() => onListenStory(story)}
-                    className="flex-1 py-1.5 rounded-lg bg-[#D4AF37] text-[#1A1A1A] font-bold text-[10px] flex items-center justify-center gap-1 active:scale-95 transition"
+                    onClick={() => onToggleFavorite(story.id)}
+                    className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:text-rose-400"
                   >
-                    <Headphones className="w-3 h-3" />
-                    <span>Ouvir</span>
-                  </button>
-                  <button
-                    onClick={() => onOpenStoryText(story)}
-                    className="flex-1 py-1.5 rounded-lg border border-white/20 text-white font-bold text-[10px] flex items-center justify-center gap-1 active:scale-95 transition hover:bg-white/10"
-                  >
-                    <BookOpen className="w-3 h-3" />
-                    <span>Ler</span>
+                    <Heart
+                      className={`w-3.5 h-3.5 ${
+                        favoriteIds.includes(story.id) ? 'fill-rose-500 text-rose-500' : 'text-white'
+                      }`}
+                    />
                   </button>
                 </div>
+
+                <div className="p-3 flex-1 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[9px] font-bold text-[#D4AF37] uppercase block truncate">
+                      {story.category.replace(/-/g, ' ')}
+                    </span>
+                    <h4 className="font-serif-royal text-xs font-bold text-[#FDF6E3] line-clamp-2 mt-0.5">
+                      {story.title}
+                    </h4>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-white/10">
+                    <button
+                      onClick={() => onListenStory(story)}
+                      className="flex-1 py-1.5 rounded-lg bg-[#D4AF37] text-[#1A1A1A] font-bold text-[10px] flex items-center justify-center gap-1 active:scale-95 transition"
+                    >
+                      {isRecorded ? <Mic className="w-3 h-3" /> : <Headphones className="w-3 h-3" />}
+                      <span>{t('common', 'listenAudio')}</span>
+                    </button>
+                    <button
+                      onClick={() => onOpenStoryText(story)}
+                      className="flex-1 py-1.5 rounded-lg border border-white/20 text-white font-bold text-[10px] flex items-center justify-center gap-1 active:scale-95 transition hover:bg-white/10"
+                    >
+                      <BookOpen className="w-3 h-3" />
+                      <span>{t('common', 'readText')}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -315,10 +328,10 @@ export const SubscriberHome: React.FC<SubscriberHomeProps> = ({
           </div>
           <div>
             <h4 className="font-serif-royal text-xs font-bold text-[#FDF6E3]">
-              Fale com a Tia Claudia
+              {language === 'en' ? 'Chat with Aunt Claudia' : language === 'es' ? 'Habla con Tía Claudia' : 'Fale com a Tia Claudia'}
             </h4>
             <p className="text-[11px] text-white/70">
-              Mande um recadinho carinhoso ou peça seu conto favorito!
+              {language === 'en' ? 'Send a warm message or ask for your favorite story!' : language === 'es' ? '¡Envía un mensaje o pide tu cuento favorito!' : 'Mande um recadinho carinhoso ou peça seu conto favorito!'}
             </p>
           </div>
         </div>
